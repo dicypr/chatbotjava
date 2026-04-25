@@ -155,11 +155,11 @@ public class GroqService {
 
     // ── Available models ─────────────────────────────────────────────────────
     public List<String> getAvailableModels() {
-        return List.of(
-            "llama3-70b-versatile",
-           "llama3-8b-instant",
-          "mixtral-8x7b-32768",
-        "gemma2-9b-it"
-        );
+    return List.of(
+        "llama-3.3-70b-versatile",
+        "llama-3.1-8b-instant",
+        "mixtral-8x7b-32768",
+        "qwen-qwq-32b"
+    );
     }
 }
