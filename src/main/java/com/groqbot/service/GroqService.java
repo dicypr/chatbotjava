@@ -23,7 +23,7 @@ public class GroqService {
 
     // ── Config ──────────────────────────────────────────────────────────────
     private static final String GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
-    private static final String DEFAULT_MODEL  = "llama3-70b-8192";
+    private static final String DEFAULT_MODEL = "llama3-70b-versatile";
     private static final String SYSTEM_PROMPT  =
         "You are a helpful, concise AI assistant built with Java and the Groq API. " +
         "You run blazingly fast thanks to Groq's LPU inference engine. " +
