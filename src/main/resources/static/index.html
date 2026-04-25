@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GroqBot — Java Chatbot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #18181f;
+    --border: #2a2a38;
+    --border2: #3a3a50;
+    --accent: #7c6ef0;
+    --accent2: #a89cf7;
+    --accent-dim: #3d3570;
+    --green: #3effa0;
+    --green-dim: #1a5c42;
+    --amber: #ffbe2e;
+    --red: #ff5c5c;
+    --text: #e8e6f0;
+    --text-muted: #7c7a90;
+    --text-dim: #4a4860;
+    --mono: 'JetBrains Mono', monospace;
+    --display: 'Syne', sans-serif;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 14px;
+    line-height: 1.6;
+    overflow: hidden;
+  }
+
+  /* ── Layout ── */
+  #app {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    height: 100vh;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  /* ── Header ── */
+  header {
+    padding: 16px 24px 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface);
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo-icon {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    background: var(--accent-dim);
+    border: 1px solid var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    position: relative;
+  }
+  .logo-icon::after {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    border-radius: 5px;
+    background: linear-gradient(135deg, var(--accent) 0%, transparent 60%);
+    opacity: 0.3;
+  }
+  .logo-icon span { position: relative; z-index: 1; }
+
+  .logo-text h1 {
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: 18px;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+
+  .logo-text p {
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.08em;
+    margin-top: -1px;
+  }
+
+  .status-bar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .status-dot {
+    display: flex; align-items: center; gap: 6px;
+  }
+
+  .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 6px var(--green);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .model-select {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--accent2);
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    outline: none;
+    cursor: pointer;
+  }
+  .model-select:hover { border-color: var(--accent); }
+
+  /* ── Messages ── */
+  #messages {
+    overflow-y: auto;
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    scroll-behavior: smooth;
+  }
+
+  #messages::-webkit-scrollbar { width: 4px; }
+  #messages::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  .msg-group { margin-bottom: 16px; }
+
+  .msg-meta {
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.06em;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .msg-meta .tag {
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+  }
+
+  .tag-user { background: var(--accent-dim); color: var(--accent2); }
+  .tag-bot  { background: var(--green-dim); color: var(--green); }
+
+  .msg-bubble {
+    padding: 12px 16px;
+    border-radius: 2px 10px 10px 10px;
+    max-width: 100%;
+    white-space: pre-wrap;
+    word-break: break-word;
+    line-height: 1.7;
+    font-size: 13.5px;
+    position: relative;
+  }
+
+  .msg-bubble.user {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-left: 2px solid var(--accent);
+    color: var(--text);
+  }
+
+  .msg-bubble.bot {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 2px solid var(--green);
+    color: var(--text);
+  }
+
+  /* Token badge */
+  .token-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-top: 6px;
+    letter-spacing: 0.04em;
+  }
+
+  .token-badge span { color: var(--amber); }
+
+  /* Typing indicator */
+  .typing-indicator {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 14px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 2px solid var(--green);
+    border-radius: 2px 10px 10px 10px;
+    width: fit-content;
+  }
+
+  .typing-indicator span {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--green);
+    animation: blink 1.2s infinite;
+    display: inline-block;
+  }
+  .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+  .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes blink {
+    0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }
+    40% { opacity: 1; transform: scale(1); }
+  }
+
+  .typing-label { font-size: 11px; color: var(--text-muted); margin-left: 4px; }
+
+  /* Error */
+  .error-msg {
+    background: rgba(255,92,92,0.08);
+    border: 1px solid rgba(255,92,92,0.25);
+    border-left: 2px solid var(--red);
+    color: var(--red);
+    padding: 10px 14px;
+    border-radius: 2px 10px 10px 10px;
+    font-size: 12px;
+  }
+
+  /* Welcome screen */
+  .welcome {
+    text-align: center;
+    padding: 60px 20px;
+    opacity: 0.8;
+  }
+  .welcome h2 {
+    font-family: var(--display);
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--accent2);
+    margin-bottom: 8px;
+  }
+  .welcome p { color: var(--text-muted); font-size: 13px; }
+  .welcome .stack {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+  }
+  .stack-tag {
+    padding: 4px 12px;
+    border: 1px solid var(--border2);
+    border-radius: 20px;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  /* ── Input area ── */
+  #input-area {
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+    padding: 16px 24px;
+  }
+
+  .input-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+  }
+
+  .prompt-prefix {
+    font-size: 13px;
+    color: var(--accent);
+    padding-bottom: 10px;
+    white-space: nowrap;
+    font-weight: 500;
+    user-select: none;
+  }
+
+  #user-input {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    resize: none;
+    outline: none;
+    min-height: 42px;
+    max-height: 120px;
+    line-height: 1.5;
+    transition: border-color 0.15s;
+  }
+  #user-input:focus { border-color: var(--accent); }
+  #user-input::placeholder { color: var(--text-dim); }
+
+  #send-btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+    white-space: nowrap;
+    letter-spacing: 0.04em;
+  }
+  #send-btn:hover { background: var(--accent2); color: var(--bg); }
+  #send-btn:active { transform: scale(0.97); }
+  #send-btn:disabled { background: var(--border); color: var(--text-dim); cursor: not-allowed; transform: none; }
+
+  .input-hint {
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-top: 8px;
+    letter-spacing: 0.04em;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 600px) {
+    header { padding: 12px 16px; }
+    #messages { padding: 16px; }
+    #input-area { padding: 12px 16px; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="logo">
+      <div class="logo-icon"><span>⚡</span></div>
+      <div class="logo-text">
+        <h1>GroqBot</h1>
+        <p>JAVA + GROQ API · LPU INFERENCE</p>
+      </div>
+    </div>
+    <div class="status-bar">
+      <div class="status-dot">
+        <div class="dot"></div>
+        <span>online</span>
+      </div>
+      <select class="model-select" id="model-select">
+        <option value="llama3-70b-8192">llama3-70b</option>
+        <option value="llama3-8b-8192">llama3-8b</option>
+        <option value="mixtral-8x7b-32768">mixtral-8x7b</option>
+        <option value="gemma2-9b-it">gemma2-9b</option>
+      </select>
+    </div>
+  </header>
+
+  <div id="messages">
+    <div class="welcome" id="welcome">
+      <h2>GroqBot</h2>
+      <p>Java-powered chatbot using Groq's blazing-fast LPU inference.</p>
+      <div class="stack">
+        <span class="stack-tag">Java 17</span>
+        <span class="stack-tag">Spring Boot 3</span>
+        <span class="stack-tag">Groq API</span>
+        <span class="stack-tag">llama3-70b</span>
+        <span class="stack-tag">HttpClient</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="input-area">
+    <div class="input-row">
+      <div class="prompt-prefix">&gt;_</div>
+      <textarea id="user-input" placeholder="Ask anything..." rows="1"></textarea>
+      <button id="send-btn" onclick="sendMessage()">send ↵</button>
+    </div>
+    <div class="input-hint">enter to send · shift+enter for newline · model: <span id="current-model">llama3-70b</span></div>
+  </div>
+</div>
+
+<script>
+const messagesEl = document.getElementById('messages');
+const inputEl    = document.getElementById('user-input');
+const sendBtn    = document.getElementById('send-btn');
+const modelSel   = document.getElementById('model-select');
+const modelLabel = document.getElementById('current-model');
+
+let conversationHistory = [];
+let isLoading = false;
+
+// ── Auto-resize textarea ──────────────────────────────────────────────────
+inputEl.addEventListener('input', () => {
+  inputEl.style.height = 'auto';
+  inputEl.style.height = Math.min(inputEl.scrollHeight, 120) + 'px';
+});
+
+// ── Enter to send ─────────────────────────────────────────────────────────
+inputEl.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    if (!isLoading) sendMessage();
+  }
+});
+
+// ── Model select ──────────────────────────────────────────────────────────
+modelSel.addEventListener('change', () => {
+  modelLabel.textContent = modelSel.value.split('-').slice(0,2).join('-');
+});
+
+// ── Send message ──────────────────────────────────────────────────────────
+async function sendMessage() {
+  const text = inputEl.value.trim();
+  if (!text || isLoading) return;
+
+  // Hide welcome
+  const welcome = document.getElementById('welcome');
+  if (welcome) welcome.remove();
+
+  inputEl.value = '';
+  inputEl.style.height = 'auto';
+  isLoading = true;
+  sendBtn.disabled = true;
+
+  // Render user message
+  renderMessage('user', text);
+
+  // Add to history
+  conversationHistory.push({ role: 'user', content: text });
+
+  // Show typing
+  const typingId = showTyping();
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: text,
+        history: conversationHistory.slice(0, -1), // exclude current (already in message)
+        model: modelSel.value
+      })
+    });
+
+    const data = await res.json();
+    removeTyping(typingId);
+
+    if (data.success) {
+      renderMessage('bot', data.reply, {
+        model: data.model,
+        tokens: data.totalTokens
+      });
+      conversationHistory.push({ role: 'assistant', content: data.reply });
+    } else {
+      renderError(data.error || 'Unknown error from server');
+    }
+
+  } catch (err) {
+    removeTyping(typingId);
+    renderError('Network error: could not reach Spring Boot server. Is it running on :8080?');
+  }
+
+  isLoading = false;
+  sendBtn.disabled = false;
+  inputEl.focus();
+}
+
+// ── Render helpers ────────────────────────────────────────────────────────
+function renderMessage(role, text, meta) {
+  const group = document.createElement('div');
+  group.className = 'msg-group';
+
+  const now = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+  const metaDiv = document.createElement('div');
+  metaDiv.className = 'msg-meta';
+  metaDiv.innerHTML = `
+    <span class="tag ${role === 'user' ? 'tag-user' : 'tag-bot'}">
+      ${role === 'user' ? 'you' : 'groqbot'}
+    </span>
+    <span>${now}</span>
+    ${meta?.model ? `<span style="color:var(--text-dim)">${meta.model}</span>` : ''}
+  `;
+
+  const bubble = document.createElement('div');
+  bubble.className = `msg-bubble ${role}`;
+  bubble.textContent = text;
+
+  group.appendChild(metaDiv);
+  group.appendChild(bubble);
+
+  if (meta?.tokens) {
+    const badge = document.createElement('div');
+    badge.className = 'token-badge';
+    badge.innerHTML = `<span>${meta.tokens}</span> tokens`;
+    group.appendChild(badge);
+  }
+
+  messagesEl.appendChild(group);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+function renderError(msg) {
+  const div = document.createElement('div');
+  div.className = 'error-msg';
+  div.textContent = '⚠ ' + msg;
+  messagesEl.appendChild(div);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+function showTyping() {
+  const id = 'typing-' + Date.now();
+  const group = document.createElement('div');
+  group.className = 'msg-group';
+  group.id = id;
+
+  const meta = document.createElement('div');
+  meta.className = 'msg-meta';
+  meta.innerHTML = `<span class="tag tag-bot">groqbot</span><span>thinking...</span>`;
+
+  const indicator = document.createElement('div');
+  indicator.className = 'typing-indicator';
+  indicator.innerHTML = `<span></span><span></span><span></span><span class="typing-label">generating</span>`;
+
+  group.appendChild(meta);
+  group.appendChild(indicator);
+  messagesEl.appendChild(group);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+  return id;
+}
+
+function removeTyping(id) {
+  document.getElementById(id)?.remove();
+}
+</script>
+</body>
+</html>
