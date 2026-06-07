@@ -159,5 +159,4 @@ Then create a `Conversation` entity and save/load history by session ID.
 
 ---
 
-## License
-MIT
+made by dicypr 
