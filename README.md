@@ -13,7 +13,7 @@ and a sleek terminal-aesthetic frontend, powered by **Groq's LPU inference** for
 | Framework  | Spring Boot 3.2                     |
 | HTTP Client| java.net.http.HttpClient (built-in) |
 | AI API     | Groq API (OpenAI-compatible)        |
-| Models     | llama3-70b, llama3-8b, mixtral-8x7b, gemma2-9b |
+| Models     | llama3-70b, llama3-8b, mixtral-8x7b, gemma2-9b |..
 | Frontend   | Vanilla HTML/CSS/JS (served by Spring Boot) |
 | Build      | Maven                               |
 
