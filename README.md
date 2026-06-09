@@ -8,8 +8,8 @@ and a sleek terminal-aesthetic frontend, powered by **Groq's LPU inference** for
 ## Tech Stack
 
 | Layer      | Technology                          |
-|------------|-------------------------------------|
-| Language   | Java 17                             |
+|------------|-------------------------------------|...
+| Language   | Java 17                             |...
 | Framework  | Spring Boot 3.2                     |
 | HTTP Client| java.net.http.HttpClient (built-in) |
 | AI API     | Groq API (OpenAI-compatible)        |
